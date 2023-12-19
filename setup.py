@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-from AutoPrune import __version__
+import __version__
 
 setup(
     name='auto_prune',
