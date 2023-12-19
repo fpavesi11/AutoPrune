@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-import __version__
+from __version__ import __version__
 
 setup(
     name='auto_prune',
