@@ -4,5 +4,6 @@ models/
 notebooks/
 .idea/
 README.md
-
+autoprune.egg-info/
+AutoPrune/autoprune.egg-info/
 
