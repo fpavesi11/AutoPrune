@@ -2,6 +2,7 @@ data/
 env/
 models/
 notebooks/
-
+.idea/
+README.md
 
 
