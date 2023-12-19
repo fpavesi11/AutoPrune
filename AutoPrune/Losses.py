@@ -1,4 +1,4 @@
-from Layers import *
+from AutoPrune.Layers import *
 
 class AlmostPenalizedLoss(nn.Module):
     def __init__(self, loss_fn, l1_lambda_hidden_rules=0.0, l2_lambda_hidden_rules=0.0, l1_lambda_rules_weights=0.0,

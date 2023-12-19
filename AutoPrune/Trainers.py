@@ -1,4 +1,4 @@
-from Models import *
+from AutoPrune.Models import *
 
 
 """
