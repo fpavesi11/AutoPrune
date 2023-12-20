@@ -1,5 +1,5 @@
 from AutoPrune.Layers import *
-
+from torch import nn
 
 ########################################################################################################################
 """
@@ -64,7 +64,7 @@ class almostOneHotNN(nn.Module):
 
         return out
 
-    def get_hidden_rules_params(self, apply_act=True):
+    def get_hidden_rules_params_tensors(self, apply_act=True):
         hidden_weights = []
         hidden_bias = None
         for rule in range(self.num_rules):
@@ -74,7 +74,7 @@ class almostOneHotNN(nn.Module):
                 hidden_bias = self.hidden_rules[rule].rule_bias.detach()
         return hidden_weights, hidden_bias
 
-    def get_rules_weight(self, apply_act=True):
+    def get_rules_weight_tensor(self, apply_act=True):
         rule_weight = self.rule_weight.linear.weight.detach()
         if apply_act and self.out_weight_constraint is not None:
             rule_weight = self.out_weight_constraint()(rule_weight)
@@ -202,7 +202,7 @@ class ClusterOneHotNN(nn.Module):
 
         return final_out
 
-    def __get_hidden_rules_params(self, apply_act=True):
+    def get_hidden_rules_params_tensors(self, apply_act=True):
         hidden_weights = []
         hidden_bias = None
         for cluster in range(self.n_clusters):
@@ -214,7 +214,7 @@ class ClusterOneHotNN(nn.Module):
                     hidden_bias = hidden_rules[rule].rule_bias.detach()
         return hidden_weights, hidden_bias
 
-    def __get_rules_weight(self, apply_act=True):
+    def get_rules_weight_tensors(self, apply_act=True):
         rule_weights = []
         for cluster in range(self.n_clusters):
             hidden_rules, rule_weight, dropout, weights_dropout = self.model[cluster]
