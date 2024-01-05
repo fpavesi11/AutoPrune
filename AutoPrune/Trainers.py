@@ -84,6 +84,8 @@ class RegularModelTrainer:
         if display_log == 'epoch':
             epoch_range = tqdm(epoch_range)
 
+        training_loss = None
+        loss = None
         for epoch in epoch_range:
             self.model.train()
 
@@ -104,13 +106,21 @@ class RegularModelTrainer:
 
                 self.optimizer.zero_grad()
 
+
+                if loss is not None:
+                    # it should not give error
+                    # batch_total is previous batch_total
+                    training_loss = loss.item()/batch_total
+
                 batch_total = len(y_train)
                 total += batch_total
 
                 x_train = x_train.to(device)
                 y_train = y_train.to(device)
+
                 outputs = self.model(x_train,
-                                     epoch).squeeze()  # <---------------------pass the epoch to model for burn in
+                                     epoch,
+                                     training_loss).squeeze()  # <---------------------pass the epoch to model for burn in
 
                 predicted = torch.round(outputs)
 
@@ -246,6 +256,8 @@ class RegularModelTrainer:
 
 class ClusterModelTrainer:
     def __init__(self, model, loss_fn, optimizer):
+        raise DeprecationWarning('This trainer is no longer valid for cluster-model training, '
+                                 'RegularModelTrainer is now valid also for cluster-model')
         self.model = model
         self.loss_fn = loss_fn
         self.optimizer = optimizer
