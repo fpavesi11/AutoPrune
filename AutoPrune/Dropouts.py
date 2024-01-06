@@ -175,15 +175,14 @@ class RegularFeatureDropout(nn.Module):
 
 
 class LossAwareFeatureDropout(nn.Module):
-    def __init__(self, p=0.1, topk=8, burn_in=10, distress_period_base=5, convergence_window_length=100, log=False):
+    def __init__(self, p=0.1, topk=8, burn_in=10, threshold=None, convergence_window_length=100, log=False):
         super(LossAwareFeatureDropout, self).__init__()
         self.p = p
         self.topk = topk
         self.burn_in = burn_in
         self.all_masks = []
         self.distressing = 0
-        self.distress_period_base = distress_period_base
-        self.distress_period = distress_period_base
+        self.threshold = threshold
         self.cut_times = 1
         self.log = log
         self.epoch = 0
@@ -192,7 +191,7 @@ class LossAwareFeatureDropout(nn.Module):
         self.n_batches = 0
         self.observed_batches = 0
         self.final_config = False
-        self.first_cut=True
+        self.first_cut = True
         self.count_cuts = 0
         self.convergence_window_length = convergence_window_length
         self.convergence_window_true = []
@@ -255,15 +254,22 @@ class LossAwareFeatureDropout(nn.Module):
                 deltas.append(x[i] - x[i - 1])
         return deltas
 
-    def check_cut_eligibility(self):
+    def check_cut_eligibility(self): # This function can be too conservative when burn in period is long
         cut_eligibility = False
         if len(self.convergence_window_check) >= self.convergence_window_length:
-            delta_true = torch.tensor(self.delta(self.convergence_window_true))
-            abs_max_delta_true = torch.max(torch.abs(delta_true))
-            abs_avg_delta_check = (torch.sum(torch.abs(torch.tensor(self.delta(self.convergence_window_check)))) / len(
-                self.convergence_window_check)).item()
-            if abs_avg_delta_check <= abs_max_delta_true:
-                cut_eligibility = True
+            if self.threshold is None: # Uses burn in convergence
+                delta_true = torch.tensor(self.delta(self.convergence_window_true))
+                abs_max_delta_true = torch.max(torch.abs(delta_true))
+                abs_avg_delta_check = (torch.sum(torch.abs(torch.tensor(self.delta(self.convergence_window_check)))) / len(
+                    self.convergence_window_check)).item()
+                if abs_avg_delta_check <= abs_max_delta_true:
+                    cut_eligibility = True
+            else: # Uses predefined threshold
+                abs_avg_delta_check = (
+                            torch.sum(torch.abs(torch.tensor(self.delta(self.convergence_window_check)))) / len(
+                        self.convergence_window_check)).item()
+                if abs_avg_delta_check <= self.threshold:
+                    cut_eligibility = True
         return cut_eligibility
 
     def forward(self, w, epoch=None, loss=None):
@@ -318,6 +324,6 @@ class LossAwareFeatureDropout(nn.Module):
                     if loss is not None:
                         self.convergence_window_true = self.window_slider(self.convergence_window_true, loss)
 
-        else:
+        else: # Evaluation
             mask_list = self.all_masks
         return mask_list
