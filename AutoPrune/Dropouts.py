@@ -140,7 +140,7 @@ class RegularFeatureDropout(nn.Module):
                         self.distressing = -1  # <----- signals the cutting has to be stopped
                         self.final_config = True
                     if self.observed_batches == 0 and self.final_config == False:
-                        print('Cutting ' + str(w[0].weight.data.size(-1) - self.drop_n) + ' DONE!')
+                        print('Epoch ' + str(epoch) + ': Cutting ' + str(w[0].weight.data.size(-1) - self.drop_n) + ' DONE!')
                         self.observed_batches = self.n_batches
                         self.distressing = self.distress_period
                         self.cut_times += 1
