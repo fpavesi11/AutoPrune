@@ -156,7 +156,6 @@ class RegularFeatureDropout(nn.Module):
                     if self.observed_batches == 0:
                         self.observed_batches = self.n_batches
                         self.distressing -= 1
-                        print('Distressing', self.distressing)
                 else:
                     mask_list = self.all_masks  # <------ when the number of weights reaches the desired quantity, cutting is stopped
 
@@ -326,4 +325,63 @@ class LossAwareFeatureDropout(nn.Module):
 
         else: # Evaluation
             mask_list = self.all_masks
+        return mask_list
+
+
+
+########################################################################################################################
+
+
+"""
+TARGETED DROPOUT
+"""
+
+
+class TargetFeatureDropout(nn.Module):
+    def __init__(self, p=0.5, threshold=0.7, burn_in=10):
+        super(TargetFeatureDropout, self).__init__()
+        self.p = p
+        self.threshold = threshold
+        self.burn_in = burn_in
+        self.drop_history = None
+
+    def forward(self, w, epoch=None, loss=None):
+        if self.drop_history is None:
+            self.drop_history = []
+            for rule in w:
+                self.drop_history.append(torch.ones_like(rule.weight.data))
+        if self.training:
+            assert epoch is not None, 'During training, epoch is needed for burn in period, be sure you are passing epoch to the model and to this layer'
+            if epoch >= self.burn_in:
+                mask_list = []
+                for n_rule, rule in enumerate(w):
+                    param = rule.weight.data
+                    mask = torch.rand(1, param.size(1)).to(param.device)
+                    # mask = torch.ones((1, param.size(1))).to(param.device)
+                    proba = torch.abs(param).to(param.device)
+                    proba = proba / torch.max(proba)  # normalize in 0 1
+                    mask += proba
+                    mask = mask / 2  # <--- normalize in 0 1
+                    # Apply dropout: set some dimensions to zero
+                    mask = (mask > self.p).float()
+                    # Expand the mask to match the dimensions of the input tensor
+                    mask = mask.expand_as(proba)
+                    # print(proba.sort(descending=True))
+                    # rule.weight.data = param * mask
+
+                    self.drop_history[n_rule] += mask
+                    self.drop_history[n_rule] /= 2
+
+                    mask_list.append(mask)
+            else:
+                mask_list = []
+                for rule in w:
+                    mask_list.append(torch.ones_like(rule.weight.data))  # <--- mask nothing before burn in period
+
+        else:
+            mask_list = []
+            for drop_mask in self.drop_history:
+                mask = drop_mask >= self.threshold
+                # rule = rule.weight.data * mask
+                mask_list.append(mask)
         return mask_list

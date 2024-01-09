@@ -492,18 +492,27 @@ class ClusterOneHotNNv2(nn.Module):
         # Input passes through all hidden rule dense modules, each output
         # is then summed up and concatenated
         # --> rule_outputs is n_obs x n_rules
+        num_cluster = int(x[-1])
+        submodel = self.model[num_cluster]
         intermediate_out = []
         rule_outputs = []
+
+        all_masks = submodel[3].all_masks
+
+        hidden_weights = []
         for r in range(self.num_rules):
-            r_activated = self.rule_activation(self.hidden_rules[r](x)).unsqueeze(1)
+            r_activated = self.rule_activation(submodel[0][r](x[:-1], all_masks[r])).unsqueeze(1)
+            hidden_weights.append(submodel[0][r].weight.data)
             rule_outputs.append(r_activated)
         rule_outputs = torch.cat(rule_outputs, dim=-1)
 
         intermediate_out.append(rule_outputs)
 
-        # rules pass trough a dense layer in which a positive weight to each rule is assigned
+        # rules pass through a dense layer in which a positive weight to each rule is assigned
         # --> out is n_obs x 1 (we are still limited to binary classification)
-        out = self.rule_weight(rule_outputs)
+        out = submodel[1](rule_outputs)
+
+        rule_weights = submodel[1].linear.weight.data
 
         intermediate_out.append(out)
 
@@ -512,7 +521,8 @@ class ClusterOneHotNNv2(nn.Module):
 
             intermediate_out.append(out)
 
-        return intermediate_out
+
+        return intermediate_out, all_masks, hidden_weights, rule_weights
 
     def get_hidden_rules_params(self):
         hidden_rules_list = nn.ModuleList([])

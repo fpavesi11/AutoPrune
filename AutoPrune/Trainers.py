@@ -199,7 +199,7 @@ class RegularModelTrainer:
             for val_x, val_y in tqdm(val_data):
                 total += len(val_y)
                 val_x = val_x.to(device)
-                val_y = val_y.to(device)
+                val_y = val_y.to(device).squeeze()
 
                 outputs = self.model(val_x).squeeze()
 
