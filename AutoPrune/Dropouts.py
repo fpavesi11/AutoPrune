@@ -271,14 +271,24 @@ class LossAwareFeatureDropout(nn.Module):
                     cut_eligibility = True
         return cut_eligibility
 
+    def __calculate_drop_n(self, w):
+        if isinstance(self.p, int):
+            drop_n = self.p
+        else:
+            drop_n = round()
+
     def forward(self, w, epoch=None, loss=None):
         # print('debugging batches', self.observed_batches, 'epoch', epoch)
         if epoch == 0 and self.training:
             assert epoch is not None, 'During training, epoch is needed for burn in period, be sure you are passing epoch to the model and to this layer'
             self.n_batches += 1
             self.observed_batches = self.n_batches
-            self.drop_n = round(
-                w[0].weight.data.size(-1) - self.p * w[0].weight.data.size(-1))  # <-- set the initial top to keep
+            # set initial top to keep
+            if isinstance(self.p, int):
+                self.drop_n = round(w[0].weight.data.size(-1) - self.p)
+            else:
+                self.drop_n = round(w[0].weight.data.size(-1) - self.p * w[0].weight.data.size(-1))
+
             for rule in w:
                 self.all_masks.append(torch.ones_like(
                     rule.weight.data))  # <--- mask nothing before burn in period DO NOT REMOVE OR FIRST ITERATION IS BROKEN
@@ -305,12 +315,15 @@ class LossAwareFeatureDropout(nn.Module):
                                             'Objective ' + str(self.topk) + ' features reached ' + str(self.drop_n))
                         self.final_config = True
                     if self.final_config == False:
-                        print('Epoch ' + str(epoch) + ': Cutting ' + str(w[0].weight.data.size(-1) - self.drop_n) + ' DONE!')
+                        if self.log:
+                            print('Epoch ' + str(epoch) + ': Cutting ' + str(w[0].weight.data.size(-1) - self.drop_n) + ' DONE!')
                         self.cut_times += 1
+                        if isinstance(self.p, int):
+                            drop_n = round(w[0].weight.data.size(-1) - self.p*self.cut_times)
+                        else:
+                            drop_n = round(w[0].weight.data.size(-1) - self.sum_n_times(self.p, self.cut_times) * w[0].weight.data.size(-1))
                         self.drop_n = max(self.topk,
-                                          round(
-                                              w[0].weight.data.size(-1) - self.sum_n_times(self.p, self.cut_times) * w[
-                                                  0].weight.data.size(-1)))
+                                          drop_n)
                     self.convergence_window_check = []  # <--- window is resetted, otherwise it considers values before cut
 
                 else:

@@ -24,7 +24,7 @@ class OneActLinear(nn.Module):
                  device=None, dtype=None) -> None:
         factory_kwargs = {'device': device, 'dtype': dtype}
         super().__init__()
-        self.weight_val = weight_val
+        self.weight_val = weight_val #useless, to be removed
         self.in_features = in_features
         self.out_features = out_features
         self.weight = nn.Parameter(torch.empty((out_features, in_features), **factory_kwargs))
