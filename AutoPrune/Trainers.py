@@ -124,7 +124,7 @@ class RegularModelTrainer:
 
                 predicted = torch.round(outputs)
 
-                batch_correct = (predicted.squeeze() == y_train.squeeze()).sum().item()
+                batch_correct = (predicted.squeeze().cpu() == y_train.squeeze().cpu()).sum().item()
                 correct += batch_correct
 
                 loss = self.loss_fn(outputs.squeeze(), y_train.squeeze(),

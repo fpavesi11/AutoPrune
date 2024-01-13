@@ -444,7 +444,7 @@ class ClusterOneHotNNv2(nn.Module):
         clusters = x[:, -1]
         inputs = x[:, :-1]
 
-        final_out = torch.empty((x.size(0), 1))  # <-- we only have binary classification
+        final_out = torch.empty((x.size(0), 1), device=x.device)  # <-- we only have binary classification
         for cluster in range(self.n_clusters):
             index = clusters == cluster
             cluster_mask = index.unsqueeze(-1).repeat_interleave(inputs.size(-1), -1)
