@@ -130,7 +130,7 @@ ALMOST OHNN
 
 
 class almostOneHotNNv2(nn.Module):
-    def __init__(self, input_size, num_rules, dropout_module, initial_weight_val=0.2, final_activation=None,
+    def __init__(self, input_size, output_size, num_rules, dropout_module, initial_weight_val=0.2, final_activation=None,
                  rule_bias=False, force_positive_out_init=True, rule_activation=None,
                  out_bias=False, out_weight_constraint=None, dropout_perc=0.5, burn_in=10, dtype=torch.float64):
 
@@ -147,7 +147,7 @@ class almostOneHotNNv2(nn.Module):
         ])
 
         # rules' weight
-        self.rule_weight = ruleDense(input_size=num_rules, num_neurons=1, weight_constraint=out_weight_constraint,
+        self.rule_weight = ruleDense(input_size=num_rules, num_neurons=output_size, weight_constraint=out_weight_constraint,
                                      bias=out_bias, force_positive_init=force_positive_out_init, dtype=dtype)
 
         self.dropout = CustomDimensionalDropout(dropout_perc)

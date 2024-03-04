@@ -6,6 +6,7 @@ import numpy as np
 from AutoPrune.DataUtils import OnevsAllBalancedSample
 from scipy.sparse import csr_matrix
 from AutoPrune.DataUtils import SentenceTransformerKMeansClustering
+from AutoPrune.ExplanationEvaluation import *
 
 
 class LanguageAutoPruneMulticlass:
@@ -138,12 +139,28 @@ class LanguageAutoPruneMulticlass:
         if num_neurons_conv == self.target_n_features:
             convergence_reached = True
 
+        avg_loss, accuracy, f1_1, f1_0 = trainer.eval_model(pred_loader_dnn, device=device)
+
+        rfreq = RuleFrequencyCluster(trainer.model.model, pred_loader_dnn, device=device)
+
+        covclust = CoverageCluster(trainer.model.model, pred_loader_dnn, device=device)
+
+        cluster_overlapping = OverlappingCluster(trainer.model.model)
+
+        feature_overlapping = OverallFeatureOverlapping(trainer.model.model, translation_vocabs)
+
         return_dict = {'predictive_loss': loss_dnn,
                        'predictive_accuracy': accuracy_dnn,
                        'predictive_f1_0': f1_0_dnn,
                        'predictive_f1_1': f1_1_dnn,
-                       'surrogate_loss_history': trainer.history['train_loss'],
-                       'surrogate_accuracy_history': trainer.history['train_accuracy'],
+                       'surrogate_loss': avg_loss,
+                       'surrogate_accuracy': accuracy,
+                       'surrogate_f1_0': f1_0,
+                       'surrogate_f1_1': f1_1,
+                       'rule_frequency': rfreq,
+                       'inverse_coverage': covclust,
+                       'cluster_overlapping': cluster_overlapping,
+                       'overall_feature_overlapping': feature_overlapping,
                        'convergence_reached': convergence_reached}
 
         return return_dict

@@ -61,6 +61,12 @@ class SentenceTransformerKMeansClustering:
             translation_vocabs.append(vocab)
         return translation_vocabs
 
+    def get_vectorization_vocabs(self):
+        vectorization_vocabs = []
+        for vectorizer in self.all_vectorizers:
+            vectorization_vocabs.append(vectorizer.vocabulary_)
+        return vectorization_vocabs
+
     def fit(self, data, device=None, log=False):
         self.transformer = self.transformer.to(device)
         embeddings = torch.tensor(self.transformer.encode(data)).to(device)

@@ -8,5 +8,5 @@ autoprune.egg-info/
 AutoPrune/autoprune.egg-info/
 _debug_.py
 _debug_v2_loss_aware.py
-_BenchmarkTesting.py
-_TestAutoModel.py
+*.pyc
+*.pkl

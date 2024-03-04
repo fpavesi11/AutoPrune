@@ -122,7 +122,7 @@ class RegularModelTrainer:
                                      epoch,
                                      training_loss).squeeze()  # <---------------------pass the epoch to model for burn in
 
-                predicted = torch.round(outputs)
+                predicted = torch.round(outputs) if outputs.size(-1) == 1 else torch.argmax(outputs)
 
                 batch_correct = (predicted.squeeze().cpu() == y_train.squeeze().cpu()).sum().item()
                 correct += batch_correct
@@ -203,7 +203,7 @@ class RegularModelTrainer:
 
                 outputs = self.model(val_x).squeeze()
 
-                batch_pred = torch.round(outputs)
+                batch_pred = torch.round(outputs) if outputs.size(-1) == 1 else torch.argmax(outputs)
 
                 loss = self.loss_fn(outputs.float(), val_y.float(),
                                     hidden_rules_parameters=self.model.get_hidden_rules_params(),
@@ -245,7 +245,7 @@ class RegularModelTrainer:
                 val_y = val_y.to(device)
                 outputs = self.model(val_x).squeeze()
                 if not prob:
-                    outputs = torch.round(outputs)
+                    outputs = torch.round(outputs) if outputs.size(-1) == 1 else torch.argmax(outputs)
                 predictions.append(outputs.to('cpu'))
         predictions = torch.cat(predictions, axis=0)
         return predictions
